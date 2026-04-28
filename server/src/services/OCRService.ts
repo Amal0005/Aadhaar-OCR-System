@@ -22,50 +22,83 @@ export class OCRService {
     }
 
     parseData(text: string) {
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
-        const cleanText = text.replace(/\s+/g, ' ');
+        // 1. Sanitize text: Remove non-ASCII characters to filter out local languages
+        const sanitizedText = text.replace(/[^\x20-\x7E\n]/g, ' ');
+        
+        const lines = sanitizedText.split('\n')
+            .map(l => l.trim())
+            .filter(l => l.length > 2);
+        
+        const fullText = lines.join(' ');
 
-        // 1. Broad DOB Extraction (Regex)
-        // Matches DD/MM/YYYY or DD-MM-YYYY with optional spaces
-        const dobMatch = cleanText.match(/(\d{2}[\/\-\s]+\d{2}[\/\-\s]+\d{4})/);
-        let dob = dobMatch ? dobMatch[0].replace(/\s+/g, '') : 'Unknown';
+        // 2. Extract Aadhaar Number (XXXX XXXX XXXX)
+        const aadhaarMatch = fullText.match(/\d{4}\s\d{4}\s\d{4}/);
+        const aadhaarNumber = aadhaarMatch ? aadhaarMatch[0] : 'Unknown';
 
-        // 2. Fallback: If no full date, look for Year of Birth (4 digits)
+        // 3. Extract Date of Birth
+        // Matches DD/MM/YYYY or Year of Birth
+        const dobMatch = fullText.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
+        let dob = dobMatch ? dobMatch[0] : 'Unknown';
         if (dob === 'Unknown') {
-            const yearMatch = cleanText.match(/(\d{4})/);
-            if (yearMatch && parseInt(yearMatch[0]) > 1900 && parseInt(yearMatch[0]) < 2100) {
-                dob = yearMatch[0];
-            }
+            const yearMatch = fullText.match(/(?:Year of Birth|YOB)[:\s]*(\d{4})/i);
+            if (yearMatch) dob = yearMatch[1];
         }
 
-        const aadhaar = cleanText.match(/(\d{4}\s\d{4}\s\d{4})/)?.[0] || 'Unknown';
-        const gender = cleanText.toLowerCase().includes('female') ? 'Female' : (cleanText.toLowerCase().includes('male') ? 'Male' : 'Other');
-        const pincode = cleanText.match(/\b\d{6}\b/)?.[0] || 'Unknown';
+        // 4. Extract Gender
+        let gender = 'Unknown';
+        if (/female/i.test(fullText)) gender = 'Female';
+        else if (/male/i.test(fullText)) gender = 'Male';
 
-        // Address Extraction (Look for the line with pincode and go upwards)
-        let address = 'Unknown';
-        const pincodeLineIndex = lines.findIndex(l => l.includes(pincode));
-        if (pincodeLineIndex !== -1) {
-            // Take 2 lines before the pincode as well
-            const start = Math.max(0, pincodeLineIndex - 2);
-            address = lines.slice(start, pincodeLineIndex + 1).join(', ');
-        }
+        // 5. Extract Pincode (6 digits)
+        const pincodeMatch = fullText.match(/\b\d{6}\b/);
+        const pincode = pincodeMatch ? pincodeMatch[0] : 'Unknown';
 
-        // Name Extraction
+        // 6. Extract Name
+        // We look for a line that is mostly English alphabets, not a header, and usually has 2-3 words.
         let name = 'Unknown';
-        const noise = ['government', 'india', 'bharat', 'sarkar', 'authority', 'unique', 'male', 'female', 'dob', 'birth', 'address'];
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const isLabel = line.toLowerCase().includes('name') || line.includes('नाम');
-            if (isLabel && i + 1 < lines.length && !/\d/.test(lines[i + 1])) {
-                name = lines[i + 1];
+        const headers = ['government', 'india', 'unique', 'identification', 'authority', 'aadhaar', 'enrollment', 'male', 'female', 'dob', 'birth', 'sarkar', 'bharat'];
+        
+        for (const line of lines) {
+            const cleanLine = line.replace(/[^a-zA-Z\s]/g, '').trim();
+            const lowerLine = cleanLine.toLowerCase();
+            
+            if (cleanLine.split(' ').length >= 2 && 
+                !headers.some(h => lowerLine.includes(h)) &&
+                !/\d/.test(line)) {
+                name = cleanLine;
                 break;
             }
-            if (!noise.some(n => line.toLowerCase().includes(n)) && !/\d/.test(line) && name === 'Unknown') {
-                name = line;
+        }
+
+        // 7. Extract Address
+        let address = 'Unknown';
+        // Address usually starts with Address, C/O, W/O, S/O, D/O
+        const addressRegex = /(?:Address|C\/O|W\/O|S\/O|D\/O)[:\s]+([\s\S]+?)(?=\d{4}\s\d{4}\s\d{4}|$)/i;
+        const addressMatch = sanitizedText.match(addressRegex);
+        
+        if (addressMatch) {
+            address = addressMatch[1]
+                .replace(/\n/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            
+            // Limit address until pincode if it's too long
+            const pMatch = address.match(/\d{6}/);
+            if (pMatch && pMatch.index !== undefined) {
+                address = address.substring(0, pMatch.index + 6);
+            }
+        } else {
+            // Fallback: If no explicit label, try to find text before pincode
+            if (pincode !== 'Unknown') {
+                const pincodeIndex = fullText.indexOf(pincode);
+                if (pincodeIndex > 20) {
+                    const possibleAddress = fullText.substring(pincodeIndex - 100, pincodeIndex + 6).trim();
+                    // Clean it up
+                    address = possibleAddress.replace(/.*?(?:Address|[:])\s*/i, '').trim();
+                }
             }
         }
 
-        return { name, dob, gender, aadhaarNumber: aadhaar, address, pincode };
+        return { name, dob, gender, aadhaarNumber, address, pincode };
     }
 }
