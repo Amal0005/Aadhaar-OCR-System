@@ -52,6 +52,7 @@ const App: React.FC = () => {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL
+      console.log("API URL:", apiUrl)
       const response = await axios.post(`${apiUrl}/aadhaar/process`, fd)
       setResult(response.data.data)
       setRawResponse(response.data)
