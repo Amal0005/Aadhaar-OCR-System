@@ -79,6 +79,7 @@ const App: React.FC = () => {
             {previews.front ? (
               <>
                 <img src={previews.front} alt="Front" />
+                <div className="replace-overlay">Click to Replace</div>
                 {loading && <div className="scanner-line" />}
               </>
             ) : (
@@ -97,6 +98,7 @@ const App: React.FC = () => {
             {previews.back ? (
               <>
                 <img src={previews.back} alt="Back" />
+                <div className="replace-overlay">Click to Replace</div>
                 {loading && <div className="scanner-line" />}
               </>
             ) : (
@@ -152,7 +154,7 @@ const App: React.FC = () => {
               <label>Pincode</label>
               <input className="input-field" readOnly value={result?.pincode || ''} placeholder="6-digit ZIP" />
             </div>
-            <div className="input-group span-2">
+            <div className="input-group span-full">
               <label>Full Address</label>
               <input className="input-field" readOnly value={result?.address || ''} placeholder="Detailed Address" />
             </div>

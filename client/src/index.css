@@ -99,6 +99,24 @@ body {
   border-color: var(--primary);
 }
 
+.replace-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(2px);
+}
+
+.upload-box:hover .replace-overlay {
+  opacity: 1;
+}
+
 .upload-icon-circle {
   width: 56px;
   height: 56px;
@@ -181,7 +199,7 @@ body {
 
 .parsed-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   background: white;
   padding: 2rem;
@@ -195,7 +213,7 @@ body {
   gap: 0.5rem;
 }
 
-.input-group.span-2 {
+.input-group.span-full {
   grid-column: 1 / -1;
 }
 
@@ -309,10 +327,6 @@ body {
   .parsed-grid {
     grid-template-columns: 1fr;
     padding: 1.5rem;
-  }
-
-  .input-group.span-2 {
-    grid-column: span 1;
   }
 
   .upload-section {
