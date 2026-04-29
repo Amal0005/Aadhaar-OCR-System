@@ -44,7 +44,16 @@ const App: React.FC = () => {
   }
 
   const handleOCR = async () => {
-    if (!frontImage || !backImage) return setError('Please upload both the front and back sides of your Aadhaar card.')
+    if (!frontImage && !backImage) {
+      return setError('Please upload both the Front and Back sides of your Aadhaar card to continue.');
+    }
+    if (!frontImage) {
+      return setError('The Front Side image is missing. Please upload it to proceed.');
+    }
+    if (!backImage) {
+      return setError('The Back Side image is missing. Please upload it to proceed.');
+    }
+
     setLoading(true); setError(null);
     const fd = new FormData()
     fd.append('frontImage', frontImage)
@@ -116,7 +125,7 @@ const App: React.FC = () => {
           </label>
         </div>
 
-        <button className="parse-btn" onClick={handleOCR} disabled={loading || !frontImage || !backImage}>
+        <button className="parse-btn" onClick={handleOCR} disabled={loading}>
           {loading ? 'Processing...' : 'Process Aadhaar'}
         </button>
 
