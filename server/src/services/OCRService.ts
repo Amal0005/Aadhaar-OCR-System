@@ -16,8 +16,14 @@ export class OCRService {
             const { data } = await axios.post(this.apiUrl, formData, { headers: formData.getHeaders() });
             if (data.IsErroredOnProcessing) throw new Error(data.ErrorMessage[0]);
             return data.ParsedResults?.[0]?.ParsedText || '';
-        } catch (error: any) {
-            throw new Error(error.response?.data?.ErrorMessage?.[0] || error.message);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                throw new Error(error.response?.data?.ErrorMessage?.[0] || error.message);
+            }
+            if (error instanceof Error) {
+                throw error;
+            }
+            throw new Error('An unknown error occurred during OCR processing');
         }
     }
 

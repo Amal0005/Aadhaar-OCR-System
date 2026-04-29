@@ -21,11 +21,12 @@ export class AadhaarController {
                 success: true,
                 data: result
             });
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Controller Error:', error);
+            const message = error instanceof Error ? error.message : 'Internal Server Error';
             res.status(500).json({
                 success: false,
-                error: error.message || 'Internal Server Error'
+                error: message
             });
         }
     }

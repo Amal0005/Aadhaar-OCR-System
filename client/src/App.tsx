@@ -17,7 +17,7 @@ const App: React.FC = () => {
   const [previews, setPreviews] = useState<{ front: string | null; back: string | null }>({ front: null, back: null })
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AadhaarData | null>(null)
-  const [rawResponse, setRawResponse] = useState<any>(null)
+  const [rawResponse, setRawResponse] = useState<unknown>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
@@ -56,8 +56,14 @@ const App: React.FC = () => {
       const response = await axios.post(`${apiUrl}/aadhaar/process`, fd)
       setResult(response.data.data)
       setRawResponse(response.data)
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Extraction failed')
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || 'Extraction failed')
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('An unexpected error occurred')
+      }
     } finally {
       setLoading(false)
     }
