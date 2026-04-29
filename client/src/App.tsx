@@ -21,13 +21,30 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
 
   // Helper for previews to fix scoping issue in mapping if needed, but we'll do it direct
+  const validateImage = (file: File) => {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      setError('Invalid file type. Please upload only images (JPG, JPEG, or PNG).');
+      return false;
+    }
+    return true;
+  }
+
   const handleFront = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) { setFrontImage(file); setPreviews(p => ({ ...p, front: URL.createObjectURL(file) })); }
+    if (file && validateImage(file)) { 
+      setFrontImage(file); 
+      setPreviews(p => ({ ...p, front: URL.createObjectURL(file) })); 
+      setError(null);
+    }
   }
   const handleBack = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) { setBackImage(file); setPreviews(p => ({ ...p, back: URL.createObjectURL(file) })); }
+    if (file && validateImage(file)) { 
+      setBackImage(file); 
+      setPreviews(p => ({ ...p, back: URL.createObjectURL(file) })); 
+      setError(null);
+    }
   }
 
   const handleOCR = async () => {
@@ -77,7 +94,7 @@ const App: React.FC = () => {
         <div>
           <p className="section-title">Aadhaar Front</p>
           <label className={`upload-box ${previews.front ? 'has-image' : ''}`}>
-            <input type="file" onChange={handleFront} hidden accept="image/*" />
+            <input type="file" onChange={handleFront} hidden accept=".jpg,.jpeg,.png" />
             {previews.front ? (
               <>
                 <img src={previews.front} alt="Front" />
@@ -96,7 +113,7 @@ const App: React.FC = () => {
         <div>
           <p className="section-title">Aadhaar Back</p>
           <label className={`upload-box ${previews.back ? 'has-image' : ''}`}>
-            <input type="file" onChange={handleBack} hidden accept="image/*" />
+            <input type="file" onChange={handleBack} hidden accept=".jpg,.jpeg,.png" />
             {previews.back ? (
               <>
                 <img src={previews.back} alt="Back" />

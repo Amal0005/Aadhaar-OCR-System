@@ -33,6 +33,15 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Aadhaar OCR Server is running' });
 });
 
+// Global Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('Error:', err.message);
+    res.status(400).json({
+        success: false,
+        error: err.message || 'An unexpected error occurred'
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

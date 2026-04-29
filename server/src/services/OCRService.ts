@@ -8,6 +8,7 @@ export class OCRService {
 
     async processImage(imagePath: string): Promise<string> {
         const buffer = await sharp(imagePath).resize(1000).jpeg({ quality: 75 }).toBuffer();
+        
         const formData = new FormData();
         formData.append('apikey', this.apiKey);
         formData.append('file', buffer, { filename: 'image.jpg', contentType: 'image/jpeg' });
