@@ -59,7 +59,7 @@ export class AadhaarService {
             // AADHAAR NUMBER MATCH CHECK: Ensure front and back belong to the same person
             if (frontData.aadhaarNumber !== 'Unknown' && 
                 backData.aadhaarNumber !== 'Unknown' && 
-                frontData.aadhaarNumber.replace(/\s/g, '') !== backData.aadhaarNumber.replace(/\s/g, '')) {
+                frontData.aadhaarNumber.replace(/\D/g, '') !== backData.aadhaarNumber.replace(/\D/g, '')) {
                 throw new Error('The Aadhaar number on the front image does not match the one on the back image. Please upload images of the same Aadhaar card.');
             }
 
