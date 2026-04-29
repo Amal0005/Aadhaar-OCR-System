@@ -50,9 +50,9 @@ const App: React.FC = () => {
     fd.append('frontImage', frontImage)
     if (backImage) fd.append('backImage', backImage)
 
+    console.log("API URL:", import.meta.env.VITE_API_URL)
     try {
       const apiUrl = import.meta.env.VITE_API_URL
-      console.log("API URL:", apiUrl)
       const response = await axios.post(`${apiUrl}/aadhaar/process`, fd)
       setResult(response.data.data)
       setRawResponse(response.data)
