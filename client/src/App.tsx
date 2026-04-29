@@ -50,9 +50,9 @@ const App: React.FC = () => {
     fd.append('frontImage', frontImage)
     if (backImage) fd.append('backImage', backImage)
 
-    console.log("API URL:", import.meta.env.VITE_API_URL)
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL
+        console.log("API URL:", apiUrl)
       const response = await axios.post(`${apiUrl}/aadhaar/process`, fd)
       setResult(response.data.data)
       setRawResponse(response.data)
@@ -67,6 +67,11 @@ const App: React.FC = () => {
     <div className="dashboard">
       {/* Left Column: Uploads */}
       <div className="upload-section">
+        <div style={{ marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>Aadhaar OCR</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Extract details from your Aadhaar card instantly.</p>
+        </div>
+
         <div>
           <p className="section-title">Aadhaar Front</p>
           <label className={`upload-box ${previews.front ? 'has-image' : ''}`}>
@@ -78,8 +83,8 @@ const App: React.FC = () => {
               </>
             ) : (
               <>
-                <div className="upload-icon-circle">☁️</div>
-                <p>Click here to Upload/Capture</p>
+                <div className="upload-icon-circle">🪪</div>
+                <p>Upload Front Side</p>
               </>
             )}
           </label>
@@ -96,59 +101,74 @@ const App: React.FC = () => {
               </>
             ) : (
               <>
-                <div className="upload-icon-circle">☁️</div>
-                <p>Click here to Upload/Capture</p>
+                <div className="upload-icon-circle">📄</div>
+                <p>Upload Back Side</p>
               </>
             )}
           </label>
         </div>
 
         <button className="parse-btn" onClick={handleOCR} disabled={loading || !frontImage}>
-          {loading ? 'Parsing...' : 'Parse Aadhaar'}
+          {loading ? 'Processing...' : 'Process Aadhaar'}
         </button>
 
-        {error && <p style={{ color: 'red', fontSize: '0.8rem', marginTop: '1rem' }}>{error}</p>}
+        {error && (
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            background: '#fee2e2', 
+            color: '#dc2626', 
+            borderRadius: '10px',
+            fontSize: '0.875rem',
+            fontWeight: 500
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
       </div>
 
       {/* Right Column: Data View */}
       <div className="data-section">
         <div>
-          <h2 style={{ marginBottom: '2rem' }}>Parsed Data</h2>
+          <h2>Extracted Information</h2>
           <div className="parsed-grid">
             <div className="input-group">
               <label>Aadhaar Number</label>
               <input className="input-field" readOnly value={result?.aadhaarNumber || ''} placeholder="XXXX XXXX XXXX" />
             </div>
             <div className="input-group">
-              <label>Name on Aadhaar</label>
-              <input className="input-field" readOnly value={result?.name || ''} placeholder="Full Name" />
+              <label>Full Name</label>
+              <input className="input-field" readOnly value={result?.name || ''} placeholder="Name as per Aadhaar" />
             </div>
             <div className="input-group">
-              <label>Date of birth</label>
+              <label>Date of Birth</label>
               <input className="input-field" readOnly value={result?.dob || ''} placeholder="DD/MM/YYYY" />
             </div>
             <div className="input-group">
               <label>Gender</label>
-              <input className="input-field" readOnly value={result?.gender || ''} placeholder="MALE/FEMALE" />
+              <input className="input-field" readOnly value={result?.gender || ''} placeholder="Gender" />
             </div>
-            <div className="input-group" style={{ gridColumn: 'span 2' }}>
-              <label>Address *</label>
-              <input className="input-field" readOnly value={result?.address || ''} placeholder="Residential Address" />
+            <div className="input-group span-2">
+              <label>Full Address</label>
+              <input className="input-field" readOnly value={result?.address || ''} placeholder="Detailed Address" />
             </div>
             <div className="input-group">
-              <label>Pincode *</label>
-              <input className="input-field" readOnly value={result?.pincode || ''} placeholder="6-digit code" />
+              <label>Pincode</label>
+              <input className="input-field" readOnly value={result?.pincode || ''} placeholder="6-digit ZIP" />
             </div>
           </div>
         </div>
 
         <div className="api-response-container">
-          <h2>API Response</h2>
+          <h2>Technical Logs</h2>
           <div className={`api-box ${rawResponse ? 'success' : ''}`}>
             {rawResponse ? (
               JSON.stringify(rawResponse, null, 2)
             ) : (
-              <p className="placeholder-text">"Start Performing OCR by inputing your Aadhaar front and back"</p>
+              <div className="placeholder-text">
+                <p>Waiting for data extraction...</p>
+                <p style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.5rem' }}>Upload images on the left to begin the process.</p>
+              </div>
             )}
           </div>
         </div>
