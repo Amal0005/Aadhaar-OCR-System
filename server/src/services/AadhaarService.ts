@@ -56,11 +56,23 @@ export class AadhaarService {
                 throw new Error('The "Back Side" image does not appear to be the back of an Aadhaar card. Please ensure you uploaded the side containing your address.');
             }
 
+            // AADHAAR NUMBER MATCH CHECK: Ensure front and back belong to the same person
+            if (frontData.aadhaarNumber !== 'Unknown' && 
+                backData.aadhaarNumber !== 'Unknown' && 
+                frontData.aadhaarNumber.replace(/\s/g, '') !== backData.aadhaarNumber.replace(/\s/g, '')) {
+                throw new Error('The Aadhaar number on the front image does not match the one on the back image. Please upload images of the same Aadhaar card.');
+            }
+
             let finalData = { ...frontData };
             
             // Prefer address and pincode from the back side
             if (backData.address !== 'Unknown') finalData.address = backData.address;
             if (backData.pincode !== 'Unknown') finalData.pincode = backData.pincode;
+
+            // Fallback for Aadhaar number if missing on front but present on back
+            if (finalData.aadhaarNumber === 'Unknown' && backData.aadhaarNumber !== 'Unknown') {
+                finalData.aadhaarNumber = backData.aadhaarNumber;
+            }
 
             return finalData;
         } finally {

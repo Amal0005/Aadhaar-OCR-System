@@ -37,8 +37,8 @@ export class OCRService {
         
         const fullText = lines.join(' ');
 
-        // 2. Extract Aadhaar Number (XXXX XXXX XXXX)
-        const aadhaarMatch = fullText.match(/\d{4}\s\d{4}\s\d{4}/);
+        // 2. Extract Aadhaar Number (XXXX XXXX XXXX or XXXXXXXXXXXX)
+        const aadhaarMatch = fullText.match(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/);
         const aadhaarNumber = aadhaarMatch ? aadhaarMatch[0] : 'Unknown';
 
         // 3. Extract Date of Birth
