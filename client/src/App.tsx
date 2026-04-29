@@ -20,19 +20,6 @@ const App: React.FC = () => {
   const [rawResponse, setRawResponse] = useState<unknown>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (side === 'front') {
-        setFrontImage(file)
-        setPreviews(p => ({ ...p, front: URL.createObjectURL(file) }))
-      } else {
-        setBackImage(file)
-        setPreviews(p => ({ ...p, back: URL.createObjectURL(file) }))
-      }
-    }
-  }
-
   // Helper for previews to fix scoping issue in mapping if needed, but we'll do it direct
   const handleFront = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
