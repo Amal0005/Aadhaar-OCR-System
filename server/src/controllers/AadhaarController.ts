@@ -8,12 +8,15 @@ export class AadhaarController {
         try {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-            if (!files || !files['frontImage']) {
-                return res.status(400).json({ error: 'Front image is required' });
+            if (!files || !files['frontImage'] || !files['backImage']) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Both Front and Back images of the Aadhaar card are required for processing.' 
+                });
             }
 
             const frontImagePath = files['frontImage'][0].path;
-            const backImagePath = files['backImage'] ? files['backImage'][0].path : undefined;
+            const backImagePath = files['backImage'][0].path;
 
             const result = await aadhaarService.processAadhaar(frontImagePath, backImagePath);
 

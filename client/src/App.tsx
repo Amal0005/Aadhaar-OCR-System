@@ -44,11 +44,11 @@ const App: React.FC = () => {
   }
 
   const handleOCR = async () => {
-    if (!frontImage) return setError('Upload front image first')
+    if (!frontImage || !backImage) return setError('Please upload both the front and back sides of your Aadhaar card.')
     setLoading(true); setError(null);
     const fd = new FormData()
     fd.append('frontImage', frontImage)
-    if (backImage) fd.append('backImage', backImage)
+    fd.append('backImage', backImage)
 
       try {
         const apiUrl = import.meta.env.VITE_API_URL
@@ -116,7 +116,7 @@ const App: React.FC = () => {
           </label>
         </div>
 
-        <button className="parse-btn" onClick={handleOCR} disabled={loading || !frontImage}>
+        <button className="parse-btn" onClick={handleOCR} disabled={loading || !frontImage || !backImage}>
           {loading ? 'Processing...' : 'Process Aadhaar'}
         </button>
 
