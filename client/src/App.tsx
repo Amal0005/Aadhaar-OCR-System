@@ -148,13 +148,13 @@ const App: React.FC = () => {
               <label>Gender</label>
               <input className="input-field" readOnly value={result?.gender || ''} placeholder="Gender" />
             </div>
-            <div className="input-group span-2">
-              <label>Full Address</label>
-              <input className="input-field" readOnly value={result?.address || ''} placeholder="Detailed Address" />
-            </div>
             <div className="input-group">
               <label>Pincode</label>
               <input className="input-field" readOnly value={result?.pincode || ''} placeholder="6-digit ZIP" />
+            </div>
+            <div className="input-group span-2">
+              <label>Full Address</label>
+              <input className="input-field" readOnly value={result?.address || ''} placeholder="Detailed Address" />
             </div>
           </div>
         </div>
