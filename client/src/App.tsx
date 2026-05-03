@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
+import { toast, Toaster } from 'react-hot-toast'
 import './App.css'
 
 interface AadhaarData {
@@ -18,13 +19,12 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<AadhaarData | null>(null)
   const [rawResponse, setRawResponse] = useState<unknown>(null)
-  const [error, setError] = useState<string | null>(null)
 
   // Helper for previews to fix scoping issue in mapping if needed, but we'll do it direct
   const validateImage = (file: File) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!validTypes.includes(file.type)) {
-      setError('Invalid file type. Please upload only images (JPG, JPEG, or PNG).');
+      toast.error('Please upload JPG or PNG images.');
       return false;
     }
     return true;
@@ -35,7 +35,6 @@ const App: React.FC = () => {
     if (file && validateImage(file)) { 
       setFrontImage(file); 
       setPreviews(p => ({ ...p, front: URL.createObjectURL(file) })); 
-      setError(null);
     }
   }
   const handleBack = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,39 +42,36 @@ const App: React.FC = () => {
     if (file && validateImage(file)) { 
       setBackImage(file); 
       setPreviews(p => ({ ...p, back: URL.createObjectURL(file) })); 
-      setError(null);
     }
   }
 
   const handleOCR = async () => {
     if (!frontImage && !backImage) {
-      return setError('Please upload both the Front and Back sides of your Aadhaar card to continue.');
+      return toast.error('Upload both sides of Aadhaar.');
     }
     if (!frontImage) {
-      return setError('The Front Side image is missing. Please upload it to proceed.');
+      return toast.error('Front side image is missing.');
     }
     if (!backImage) {
-      return setError('The Back Side image is missing. Please upload it to proceed.');
+      return toast.error('Back side image is missing.');
     }
 
-    setLoading(true); setError(null);
+    setLoading(true);
     const fd = new FormData()
     fd.append('frontImage', frontImage)
     fd.append('backImage', backImage)
 
       try {
         const apiUrl = import.meta.env.VITE_API_URL
-        console.log("API URL:", apiUrl)
       const response = await axios.post(`${apiUrl}/aadhaar/process`, fd)
       setResult(response.data.data)
       setRawResponse(response.data)
+      toast.success('Processing complete!')
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.error || 'Extraction failed')
-      } else if (err instanceof Error) {
-        setError(err.message)
+        toast.error(err.response?.data?.error || 'Extraction failed')
       } else {
-        setError('An unexpected error occurred')
+        toast.error('Something went wrong.')
       }
     } finally {
       setLoading(false)
@@ -133,19 +129,7 @@ const App: React.FC = () => {
           {loading ? 'Processing...' : 'Process Aadhaar'}
         </button>
 
-        {error && (
-          <div style={{ 
-            marginTop: '1rem', 
-            padding: '1rem', 
-            background: '#fee2e2', 
-            color: '#dc2626', 
-            borderRadius: '10px',
-            fontSize: '0.875rem',
-            fontWeight: 500
-          }}>
-            ⚠️ {error}
-          </div>
-        )}
+        <Toaster position="top-center" />
       </div>
 
       {/* Right Column: Data View */}
