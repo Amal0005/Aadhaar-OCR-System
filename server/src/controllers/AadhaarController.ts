@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
-import { AadhaarService } from '../services/AadhaarService';
+import { AadhaarService } from '../services/AadhaarService.js';
+import { HttpStatus } from '../constants/HttpStatus.js';
+import { ErrorMessages } from '../constants/ErrorMessages.js';
 
 const aadhaarService = new AadhaarService();
 
@@ -9,9 +11,9 @@ export class AadhaarController {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
             if (!files || !files['frontImage'] || !files['backImage']) {
-                return res.status(400).json({ 
+                return res.status(HttpStatus.BAD_REQUEST).json({ 
                     success: false, 
-                    error: 'Both Front and Back images of the Aadhaar card are required for processing.' 
+                    error: ErrorMessages.MISSING_IMAGES 
                 });
             }
 
@@ -20,14 +22,14 @@ export class AadhaarController {
 
             const result = await aadhaarService.processAadhaar(frontImagePath, backImagePath);
 
-            res.status(200).json({
+            res.status(HttpStatus.OK).json({
                 success: true,
                 data: result
             });
         } catch (error: unknown) {
             console.error('Controller Error:', error);
-            const message = error instanceof Error ? error.message : 'Internal Server Error';
-            res.status(500).json({
+            const message = error instanceof Error ? error.message : ErrorMessages.INTERNAL_SERVER_ERROR;
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: message
             });

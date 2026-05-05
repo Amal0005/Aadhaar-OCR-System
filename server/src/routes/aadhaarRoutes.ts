@@ -1,6 +1,6 @@
 import express from 'express';
-import { AadhaarController } from '../controllers/AadhaarController';
-import { uploadMiddleware } from '../middleware/uploadMiddleware';
+import { AadhaarController } from '../controllers/AadhaarController.js';
+import { uploadMiddleware } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 const aadhaarController = new AadhaarController();

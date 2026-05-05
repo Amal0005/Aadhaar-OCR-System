@@ -1,5 +1,7 @@
-import { OCRService } from './OCRService';
+import { OCRService } from './OCRService.js';
 import fs from 'fs';
+import { ErrorMessages } from '../constants/ErrorMessages.js';
+import { AadhaarDataSchema } from '../schemas/AadhaarSchema.js';
 
 export class AadhaarService {
     private ocr = new OCRService();
@@ -16,15 +18,15 @@ export class AadhaarService {
             const hasFrontKeywords = aadhaarKeywords.some(k => lowerFrontText.includes(k));
 
             if (frontData.aadhaarNumber === 'Unknown' && !hasFrontKeywords) {
-                throw new Error('The "Front Side" image does not appear to be a valid Aadhaar document. Please upload a clear image of your Aadhaar card.');
+                throw new Error(ErrorMessages.INVALID_FRONT_IMAGE);
             }
 
             // Validation: Front side should have at least Name or DOB
             if (frontData.name === 'Unknown' && frontData.dob === 'Unknown') {
                 if (frontData.address !== 'Unknown') {
-                    throw new Error('It looks like you uploaded the Back Side in the "Front Side" slot. Please upload the side with your photo and name.');
+                    throw new Error(ErrorMessages.FRONT_BACK_MISMATCH_SLOT_FRONT);
                 }
-                throw new Error('Could not find Name or Date of Birth on the Front Side. Please upload a clearer image.');
+                throw new Error(ErrorMessages.FRONT_DATA_NOT_FOUND);
             }
 
             // 2. Process Back Side
@@ -35,12 +37,12 @@ export class AadhaarService {
             const hasBackKeywords = aadhaarKeywords.some(k => lowerBackText.includes(k));
 
             if (backData.aadhaarNumber === 'Unknown' && !hasBackKeywords && backData.pincode === 'Unknown') {
-                throw new Error('The "Back Side" image does not appear to be a valid Aadhaar document. Please upload the side containing your address.');
+                throw new Error(ErrorMessages.INVALID_BACK_IMAGE);
             }
 
             // DUPLICATE IMAGE CHECK: Ensure the user didn't upload the exact same side twice
             if (frontText.trim() === backText.trim()) {
-                throw new Error('You have uploaded the same image for both sides. Please upload the Front side and Back side separately.');
+                throw new Error(ErrorMessages.DUPLICATE_IMAGES);
             }
             
             // Validation: Back side should have a valid Address or Pincode
@@ -49,18 +51,18 @@ export class AadhaarService {
 
             // ANTI-DUPLICATE CHECK: If the back side has a name, it's likely the front side again!
             if (backData.name !== 'Unknown' && (isAddressInvalid && isPincodeInvalid)) {
-                throw new Error('It looks like you uploaded the Front Side of the card in the "Back Side" slot. Please upload the side containing your address.');
+                throw new Error(ErrorMessages.FRONT_BACK_MISMATCH_SLOT_BACK);
             }
 
             if (isAddressInvalid && isPincodeInvalid) {
-                throw new Error('The "Back Side" image does not appear to be the back of an Aadhaar card. Please ensure you uploaded the side containing your address.');
+                throw new Error(ErrorMessages.BACK_SIDE_NOT_RECOGNIZED);
             }
 
             // AADHAAR NUMBER MATCH CHECK: Ensure front and back belong to the same person
             if (frontData.aadhaarNumber !== 'Unknown' && 
                 backData.aadhaarNumber !== 'Unknown' && 
                 frontData.aadhaarNumber.replace(/\D/g, '') !== backData.aadhaarNumber.replace(/\D/g, '')) {
-                throw new Error('The Aadhaar number on the front image does not match the one on the back image. Please upload images of the same Aadhaar card.');
+                throw new Error(ErrorMessages.AADHAAR_NUMBER_MISMATCH);
             }
 
             let finalData = { ...frontData };
@@ -74,7 +76,7 @@ export class AadhaarService {
                 finalData.aadhaarNumber = backData.aadhaarNumber;
             }
 
-            return finalData;
+            return AadhaarDataSchema.parse(finalData);
         } finally {
             [frontPath, backPath].forEach(path => {
                 if (path && fs.existsSync(path)) {

@@ -6,7 +6,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
-import aadhaarRoutes from './routes/aadhaarRoutes';
+import aadhaarRoutes from './routes/aadhaarRoutes.js';
+import { HttpStatus } from './constants/HttpStatus.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,13 +31,13 @@ app.use('/api/aadhaar', aadhaarRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Aadhaar OCR Server is running' });
+    res.status(HttpStatus.OK).json({ status: 'OK', message: 'Aadhaar OCR Server is running' });
 });
 
 // Global Error Handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.error('Error:', err.message);
-    res.status(400).json({
+    res.status(HttpStatus.BAD_REQUEST).json({
         success: false,
         error: err.message || 'An unexpected error occurred'
     });

@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { toast, Toaster } from 'react-hot-toast'
 import './App.css'
+import { ErrorMessages } from './constants/ErrorMessages.js'
+import { FileSchema, AadhaarDataSchema } from './schemas/AadhaarSchema.js'
 
 interface AadhaarData {
   name: string;
@@ -22,9 +24,9 @@ const App: React.FC = () => {
 
   // Helper for previews to fix scoping issue in mapping if needed, but we'll do it direct
   const validateImage = (file: File) => {
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please upload JPG or PNG images.');
+    const result = FileSchema.safeParse(file);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
       return false;
     }
     return true;
@@ -47,13 +49,13 @@ const App: React.FC = () => {
 
   const handleOCR = async () => {
     if (!frontImage && !backImage) {
-      return toast.error('Upload both sides of Aadhaar.');
+      return toast.error(ErrorMessages.MISSING_BOTH_IMAGES);
     }
     if (!frontImage) {
-      return toast.error('Front side image is missing.');
+      return toast.error(ErrorMessages.MISSING_FRONT_IMAGE);
     }
     if (!backImage) {
-      return toast.error('Back side image is missing.');
+      return toast.error(ErrorMessages.MISSING_BACK_IMAGE);
     }
 
     setLoading(true);
@@ -64,14 +66,15 @@ const App: React.FC = () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL
       const response = await axios.post(`${apiUrl}/aadhaar/process`, fd)
-      setResult(response.data.data)
+      const parsedData = AadhaarDataSchema.parse(response.data.data)
+      setResult(parsedData)
       setRawResponse(response.data)
-      toast.success('Processing complete!')
+      toast.success(ErrorMessages.PROCESSING_COMPLETE)
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.error || 'Extraction failed')
+        toast.error(err.response?.data?.error || ErrorMessages.EXTRACTION_FAILED)
       } else {
-        toast.error('Something went wrong.')
+        toast.error(ErrorMessages.GENERIC_ERROR)
       }
     } finally {
       setLoading(false)
