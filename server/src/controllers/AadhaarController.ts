@@ -1,38 +1,32 @@
-import { Request, Response } from 'express';
-import { AadhaarService } from '../services/AadhaarService.js';
+import { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../constants/HttpStatus.js';
 import { ErrorMessages } from '../constants/ErrorMessages.js';
+import { AppError } from '../utils/AppError.js';
 
-const aadhaarService = new AadhaarService();
+import { IAadhaarService } from '../interfaces/IServices.js';
 
 export class AadhaarController {
-    async processOCR(req: Request, res: Response) {
+    constructor(private aadhaarService: IAadhaarService) {}
+
+    async processOCR(req: Request, res: Response, next: NextFunction) {
         try {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
             if (!files || !files['frontImage'] || !files['backImage']) {
-                return res.status(HttpStatus.BAD_REQUEST).json({ 
-                    success: false, 
-                    error: ErrorMessages.MISSING_IMAGES 
-                });
+                throw new AppError(ErrorMessages.MISSING_IMAGES, HttpStatus.BAD_REQUEST);
             }
 
             const frontImagePath = files['frontImage'][0].path;
             const backImagePath = files['backImage'][0].path;
 
-            const result = await aadhaarService.processAadhaar(frontImagePath, backImagePath);
+            const result = await this.aadhaarService.processAadhaar(frontImagePath, backImagePath);
 
             res.status(HttpStatus.OK).json({
                 success: true,
                 data: result
             });
         } catch (error: unknown) {
-            console.error('Controller Error:', error);
-            const message = error instanceof Error ? error.message : ErrorMessages.INTERNAL_SERVER_ERROR;
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                error: message
-            });
+            next(error);
         }
     }
 }

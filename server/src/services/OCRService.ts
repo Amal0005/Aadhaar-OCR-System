@@ -1,10 +1,11 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import sharp from 'sharp';
+import { IOCRService } from '../interfaces/IServices.js';
 
-export class OCRService {
+export class OCRService implements IOCRService {
     private apiKey: string = process.env.OCR_SPACE_API_KEY || 'helloworld';
-    private apiUrl: string = 'https://api.ocr.space/parse/image';
+    private apiUrl: string = process.env.OCR_API_URL || 'https://api.ocr.space/parse/image';
 
     async processImage(imagePath: string): Promise<string> {
         const buffer = await sharp(imagePath).resize(1000).jpeg({ quality: 75 }).toBuffer();
