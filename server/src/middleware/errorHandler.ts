@@ -10,7 +10,6 @@ export const errorHandler = (
 ) => {
   let { statusCode, message } = err;
 
-  // Handle Zod Validation Errors
   if (err instanceof ZodError) {
     statusCode = HttpStatus.BAD_REQUEST;
     message = err.issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');

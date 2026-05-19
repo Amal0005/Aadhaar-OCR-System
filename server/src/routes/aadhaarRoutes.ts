@@ -6,7 +6,6 @@ import { uploadMiddleware } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-// Dependency Injection Wiring
 const ocrService = new OCRService();
 const aadhaarService = new AadhaarService(ocrService);
 const aadhaarController = new AadhaarController(aadhaarService);

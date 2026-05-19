@@ -11,11 +11,9 @@ export class AadhaarService implements IAadhaarService {
 
     async processAadhaar(frontPath: string, backPath: string) {
         try {
-            // 1. Process Front Side
             const frontText = await this.ocr.processImage(frontPath);
             const frontData = this.ocr.parseData(frontText);
 
-            // KEYWORD CHECK: Does this even look like an Aadhaar document?
             const aadhaarKeywords = ['aadhaar', 'unique', 'government', 'india', 'identification'];
             const lowerFrontText = frontText.toLowerCase();
             const hasFrontKeywords = aadhaarKeywords.some(k => lowerFrontText.includes(k));
@@ -24,7 +22,6 @@ export class AadhaarService implements IAadhaarService {
                 throw new AppError(ErrorMessages.INVALID_FRONT_IMAGE, HttpStatus.BAD_REQUEST);
             }
 
-            // Validation: Front side should have at least Name or DOB
             if (frontData.name === 'Unknown' && frontData.dob === 'Unknown') {
                 if (frontData.address !== 'Unknown') {
                     throw new AppError(ErrorMessages.FRONT_BACK_MISMATCH_SLOT_FRONT, HttpStatus.BAD_REQUEST);
@@ -32,7 +29,6 @@ export class AadhaarService implements IAadhaarService {
                 throw new AppError(ErrorMessages.FRONT_DATA_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
 
-            // 2. Process Back Side
             const backText = await this.ocr.processImage(backPath);
             const backData = this.ocr.parseData(backText);
 

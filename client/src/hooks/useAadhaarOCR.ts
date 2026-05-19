@@ -19,7 +19,7 @@ export const useAadhaarOCR = () => {
     try {
       const data = await AadhaarService.process(frontImage, backImage);
       const parsedData = AadhaarDataSchema.parse(data.data);
-      
+
       setResult(parsedData);
       setRawResponse(data);
       toast.success('Processing Complete');

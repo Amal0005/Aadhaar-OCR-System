@@ -30,7 +30,6 @@ export class OCRService implements IOCRService {
     }
 
     parseData(text: string) {
-        // 1. Sanitize text: Remove non-ASCII characters to filter out local languages
         const sanitizedText = text.replace(/[^\x20-\x7E\n]/g, ' ');
         
         const lines = sanitizedText.split('\n')
@@ -39,12 +38,9 @@ export class OCRService implements IOCRService {
         
         const fullText = lines.join(' ');
 
-        // 2. Extract Aadhaar Number (XXXX XXXX XXXX or XXXXXXXXXXXX)
         const aadhaarMatch = fullText.match(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/);
         const aadhaarNumber = aadhaarMatch ? aadhaarMatch[0] : 'Unknown';
 
-        // 3. Extract Date of Birth
-        // Matches DD/MM/YYYY or Year of Birth
         const dobMatch = fullText.match(/(\d{2}[\/\-]\d{2}[\/\-]\d{4})/);
         let dob = dobMatch ? dobMatch[0] : 'Unknown';
         if (dob === 'Unknown') {
@@ -52,17 +48,13 @@ export class OCRService implements IOCRService {
             if (yearMatch) dob = yearMatch[1];
         }
 
-        // 4. Extract Gender
         let gender = 'Unknown';
         if (/female/i.test(fullText)) gender = 'Female';
         else if (/male/i.test(fullText)) gender = 'Male';
 
-        // 5. Extract Pincode (6 digits)
         const pincodeMatch = fullText.match(/\b\d{6}\b/);
         const pincode = pincodeMatch ? pincodeMatch[0] : 'Unknown';
 
-        // 6. Extract Name
-        // We look for a line that is mostly English alphabets, not a header, and usually has 2-3 words.
         let name = 'Unknown';
         const headers = ['government', 'india', 'unique', 'identification', 'authority', 'aadhaar', 'enrollment', 'male', 'female', 'dob', 'birth', 'sarkar', 'bharat'];
         
@@ -78,9 +70,7 @@ export class OCRService implements IOCRService {
             }
         }
 
-        // 7. Extract Address
         let address = 'Unknown';
-        // Address usually starts with Address, C/O, W/O, S/O, D/O
         const addressRegex = /(?:Address|C\/O|W\/O|S\/O|D\/O)[:\s]+([\s\S]+?)(?=\d{4}\s\d{4}\s\d{4}|$)/i;
         const addressMatch = sanitizedText.match(addressRegex);
         
@@ -90,7 +80,6 @@ export class OCRService implements IOCRService {
                 .replace(/\s+/g, ' ')
                 .trim();
             
-            // Limit address until pincode if it's too long
             const pMatch = address.match(/\d{6}/);
             if (pMatch && pMatch.index !== undefined) {
                 address = address.substring(0, pMatch.index + 6);
