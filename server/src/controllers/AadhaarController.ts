@@ -6,7 +6,7 @@ import { AppError } from '../utils/AppError.js';
 import { IAadhaarService } from '../interfaces/IServices.js';
 
 export class AadhaarController {
-    constructor(private aadhaarService: IAadhaarService) {}
+    constructor(private _aadhaarService: IAadhaarService) {}
 
     async processOCR(req: Request, res: Response, next: NextFunction) {
         try {
@@ -19,7 +19,7 @@ export class AadhaarController {
             const frontImagePath = files['frontImage'][0].path;
             const backImagePath = files['backImage'][0].path;
 
-            const result = await this.aadhaarService.processAadhaar(frontImagePath, backImagePath);
+            const result = await this._aadhaarService.processAadhaar(frontImagePath, backImagePath);
 
             res.status(HttpStatus.OK).json({
                 success: true,

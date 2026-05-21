@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpStatus } from '../constants/HttpStatus.js';
 import { ZodError } from 'zod';
+import { env } from '../config/env.js';
 
 export const errorHandler = (
   err: any,
@@ -28,7 +29,7 @@ export const errorHandler = (
     status: 'error',
     statusCode,
     message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 };
 

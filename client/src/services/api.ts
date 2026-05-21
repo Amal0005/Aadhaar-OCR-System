@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { env } from '../config/env';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: env.VITE_API_URL,
   timeout: 30000, // OCR can take some time
 });
 

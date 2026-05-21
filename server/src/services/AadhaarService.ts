@@ -7,12 +7,12 @@ import { HttpStatus } from '../constants/HttpStatus.js';
 import { IAadhaarService, IOCRService } from '../interfaces/IServices.js';
 
 export class AadhaarService implements IAadhaarService {
-    constructor(private ocr: IOCRService) { }
+    constructor(private _ocr: IOCRService) { }
 
     async processAadhaar(frontPath: string, backPath: string) {
         try {
-            const frontText = await this.ocr.processImage(frontPath);
-            const frontData = this.ocr.parseData(frontText);
+            const frontText = await this._ocr.processImage(frontPath);
+            const frontData = this._ocr.parseData(frontText);
 
             const aadhaarKeywords = ['aadhaar', 'unique', 'government', 'india', 'identification'];
             const lowerFrontText = frontText.toLowerCase();
@@ -29,8 +29,8 @@ export class AadhaarService implements IAadhaarService {
                 throw new AppError(ErrorMessages.FRONT_DATA_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
 
-            const backText = await this.ocr.processImage(backPath);
-            const backData = this.ocr.parseData(backText);
+            const backText = await this._ocr.processImage(backPath);
+            const backData = this._ocr.parseData(backText);
 
             const lowerBackText = backText.toLowerCase();
             const hasBackKeywords = aadhaarKeywords.some(k => lowerBackText.includes(k));

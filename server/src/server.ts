@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import { env } from './config/env.js';
 
 import express from 'express';
 import cors from 'cors';
@@ -13,7 +12,7 @@ import { errorHandler } from './middleware/errorHandler.js';
 import { AppError } from './utils/AppError.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -22,7 +21,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: env.CLIENT_URL,
   credentials: true
 }));
 app.use(express.json());
