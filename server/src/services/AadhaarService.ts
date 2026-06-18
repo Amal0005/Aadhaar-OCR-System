@@ -1,55 +1,84 @@
 import fs from 'fs';
-import { ErrorMessages } from '../constants/ErrorMessages.js';
-import { AadhaarDataSchema } from '../schemas/AadhaarSchema.js';
-import { AppError } from '../utils/AppError.js';
-import { HttpStatus } from '../constants/HttpStatus.js';
+import { ErrorMessages } from '../constants/ErrorMessages';
+import { AadhaarDataSchema } from '../schemas/AadhaarSchema';
+import { AppError } from '../utils/AppError';
+import { HttpStatus } from '../constants/HttpStatus';
 
-import { IAadhaarService, IOCRService } from '../interfaces/IServices.js';
+import { IAadhaarService, IOCRService } from '../interfaces/IServices';
 
 export class AadhaarService implements IAadhaarService {
     constructor(private _ocr: IOCRService) { }
 
     async processAadhaar(frontPath: string, backPath: string) {
         try {
-            const frontText = await this._ocr.processImage(frontPath);
-            const frontData = this._ocr.parseData(frontText);
+            const text1 = await this._ocr.processImage(frontPath);
+            const data1 = this._ocr.parseData(text1);
+
+            const text2 = await this._ocr.processImage(backPath);
+            const data2 = this._ocr.parseData(text2);
+
+            const getScores = (data: any) => {
+                let frontScore = 0;
+                let backScore = 0;
+                if (data.name !== 'Unknown') frontScore += 2;
+                if (data.dob !== 'Unknown') frontScore += 2;
+                if (data.address === 'Unknown') frontScore += 1;
+                if (data.pincode === 'Unknown') frontScore += 1;
+
+                if (data.address !== 'Unknown') backScore += 2;
+                if (data.pincode !== 'Unknown') backScore += 2;
+                if (data.name === 'Unknown') backScore += 1;
+                if (data.dob === 'Unknown') backScore += 1;
+
+                return { frontScore, backScore };
+            };
+
+            const score1 = getScores(data1);
+            const score2 = getScores(data2);
+
+            let finalFrontText = text1;
+            let finalFrontData = data1;
+            let finalBackText = text2;
+            let finalBackData = data2;
+
+            const isSwapped = (score2.frontScore + score1.backScore) > (score1.frontScore + score2.backScore);
+            if (isSwapped) {
+                finalFrontText = text2;
+                finalFrontData = data2;
+                finalBackText = text1;
+                finalBackData = data1;
+            }
 
             const aadhaarKeywords = ['aadhaar', 'unique', 'government', 'india', 'identification'];
-            const lowerFrontText = frontText.toLowerCase();
+            const lowerFrontText = finalFrontText.toLowerCase();
             const hasFrontKeywords = aadhaarKeywords.some(k => lowerFrontText.includes(k));
 
-            if (frontData.aadhaarNumber === 'Unknown' && !hasFrontKeywords) {
+            if (finalFrontData.aadhaarNumber === 'Unknown' && !hasFrontKeywords) {
                 throw new AppError(ErrorMessages.INVALID_FRONT_IMAGE, HttpStatus.BAD_REQUEST);
             }
 
-            if (frontData.name === 'Unknown' && frontData.dob === 'Unknown') {
-                if (frontData.address !== 'Unknown') {
+            if (finalFrontData.name === 'Unknown' && finalFrontData.dob === 'Unknown') {
+                if (finalFrontData.address !== 'Unknown') {
                     throw new AppError(ErrorMessages.FRONT_BACK_MISMATCH_SLOT_FRONT, HttpStatus.BAD_REQUEST);
                 }
                 throw new AppError(ErrorMessages.FRONT_DATA_NOT_FOUND, HttpStatus.BAD_REQUEST);
             }
 
-            const backText = await this._ocr.processImage(backPath);
-            const backData = this._ocr.parseData(backText);
-
-            const lowerBackText = backText.toLowerCase();
+            const lowerBackText = finalBackText.toLowerCase();
             const hasBackKeywords = aadhaarKeywords.some(k => lowerBackText.includes(k));
 
-            if (backData.aadhaarNumber === 'Unknown' && !hasBackKeywords && backData.pincode === 'Unknown') {
+            if (finalBackData.aadhaarNumber === 'Unknown' && !hasBackKeywords && finalBackData.pincode === 'Unknown') {
                 throw new AppError(ErrorMessages.INVALID_BACK_IMAGE, HttpStatus.BAD_REQUEST);
             }
 
-            // DUPLICATE IMAGE CHECK: Ensure the user didn't upload the exact same side twice
-            if (frontText.trim() === backText.trim()) {
+            if (finalFrontText.trim() === finalBackText.trim()) {
                 throw new AppError(ErrorMessages.DUPLICATE_IMAGES, HttpStatus.BAD_REQUEST);
             }
 
-            // Validation: Back side should have a valid Address or Pincode
-            const isAddressInvalid = !backData.address || backData.address === 'Unknown' || backData.address.length < 10;
-            const isPincodeInvalid = !backData.pincode || backData.pincode === 'Unknown';
+            const isAddressInvalid = !finalBackData.address || finalBackData.address === 'Unknown' || finalBackData.address.length < 10;
+            const isPincodeInvalid = !finalBackData.pincode || finalBackData.pincode === 'Unknown';
 
-            // ANTI-DUPLICATE CHECK: If the back side has a name, it's likely the front side again!
-            if (backData.name !== 'Unknown' && (isAddressInvalid && isPincodeInvalid)) {
+            if (finalBackData.name !== 'Unknown' && (isAddressInvalid && isPincodeInvalid)) {
                 throw new AppError(ErrorMessages.FRONT_BACK_MISMATCH_SLOT_BACK, HttpStatus.BAD_REQUEST);
             }
 
@@ -57,23 +86,19 @@ export class AadhaarService implements IAadhaarService {
                 throw new AppError(ErrorMessages.BACK_SIDE_NOT_RECOGNIZED, HttpStatus.BAD_REQUEST);
             }
 
-            // AADHAAR NUMBER MATCH CHECK: Ensure front and back belong to the same person
-            if (frontData.aadhaarNumber !== 'Unknown' &&
-                backData.aadhaarNumber !== 'Unknown' &&
-                frontData.aadhaarNumber.replace(/\D/g, '') !== backData.aadhaarNumber.replace(/\D/g, '')) {
+            if (finalFrontData.aadhaarNumber !== 'Unknown' &&
+                finalBackData.aadhaarNumber !== 'Unknown' &&
+                finalFrontData.aadhaarNumber.replace(/\D/g, '') !== finalBackData.aadhaarNumber.replace(/\D/g, '')) {
                 throw new AppError(ErrorMessages.AADHAAR_NUMBER_MISMATCH, HttpStatus.BAD_REQUEST);
             }
 
+            let finalData = { ...finalFrontData };
 
-            let finalData = { ...frontData };
+            if (finalBackData.address !== 'Unknown') finalData.address = finalBackData.address;
+            if (finalBackData.pincode !== 'Unknown') finalData.pincode = finalBackData.pincode;
 
-            // Prefer address and pincode from the back side
-            if (backData.address !== 'Unknown') finalData.address = backData.address;
-            if (backData.pincode !== 'Unknown') finalData.pincode = backData.pincode;
-
-            // Fallback for Aadhaar number if missing on front but present on back
-            if (finalData.aadhaarNumber === 'Unknown' && backData.aadhaarNumber !== 'Unknown') {
-                finalData.aadhaarNumber = backData.aadhaarNumber;
+            if (finalData.aadhaarNumber === 'Unknown' && finalBackData.aadhaarNumber !== 'Unknown') {
+                finalData.aadhaarNumber = finalBackData.aadhaarNumber;
             }
 
             return AadhaarDataSchema.parse(finalData);

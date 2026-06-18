@@ -16,6 +16,8 @@ export const useAadhaarOCR = () => {
     }
 
     setLoading(true);
+    setResult(null);
+    setRawResponse(null);
     try {
       const data = await AadhaarService.process(frontImage, backImage);
       const parsedData = AadhaarDataSchema.parse(data.data);

@@ -1,8 +1,8 @@
 import axios from 'axios';
 import FormData from 'form-data';
 import sharp from 'sharp';
-import { IOCRService } from '../interfaces/IServices.js';
-import { env } from '../config/env.js';
+import { IOCRService } from '../interfaces/IServices';
+import { env } from '../config/env';
 
 export class OCRService implements IOCRService {
     private _apiKey: string = env.OCR_SPACE_API_KEY;

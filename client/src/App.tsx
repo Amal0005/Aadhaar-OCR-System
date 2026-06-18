@@ -137,19 +137,7 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="api-response-container">
-          <h2>Technical Logs</h2>
-          <div className={`api-box ${rawResponse ? 'success' : ''}`}>
-            {rawResponse ? (
-              JSON.stringify(rawResponse, null, 2)
-            ) : (
-              <div className="placeholder-text">
-                <p>Waiting for data extraction...</p>
-                <p style={{ fontSize: '0.8rem', opacity: 0.7, marginTop: '0.5rem' }}>Upload images on the left to begin the process.</p>
-              </div>
-            )}
-          </div>
-        </div>
+
       </div>
     </div>
   )
