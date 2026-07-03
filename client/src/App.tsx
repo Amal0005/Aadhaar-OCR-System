@@ -50,6 +50,23 @@ const App: React.FC = () => {
     await processImages(frontImage, backImage);
   }
 
+  const handleCopy = () => {
+    if (!result) {
+      toast.error('No details to copy');
+      return;
+    }
+    const details = `
+Aadhaar Number: ${result.aadhaarNumber || 'N/A'}
+Name: ${result.name || 'N/A'}
+DOB: ${result.dob || 'N/A'}
+Gender: ${result.gender || 'N/A'}
+Pincode: ${result.pincode || 'N/A'}
+Address: ${result.address || 'N/A'}
+    `.trim();
+    navigator.clipboard.writeText(details)
+      .then(() => toast.success('Copied to clipboard'))
+      .catch(() => toast.error('Failed to copy'));
+  }
 
   return (
     <div className="dashboard">
@@ -108,7 +125,32 @@ const App: React.FC = () => {
       {/* Right Column: Data View */}
       <div className="data-section">
         <div>
-          <h2>Extracted Information</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ margin: 0 }}>Extracted Information</h2>
+            <button 
+              onClick={handleCopy} 
+              disabled={!result}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                border: 'none',
+                backgroundColor: 'var(--primary)',
+                color: 'white',
+                cursor: result ? 'pointer' : 'not-allowed',
+                opacity: result ? 1 : 0.5,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy
+            </button>
+          </div>
           <div className="parsed-grid">
             <div className="input-group">
               <label>Aadhaar Number</label>
